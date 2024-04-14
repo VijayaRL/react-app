@@ -1,0 +1,51 @@
+name: Docker Build and Deploy
+
+on:
+  push:
+    paths:
+    - 'docker-image/**'
+
+env:
+  REGISTRY: 819370969351.dkr.ecr.us-east-1.amazonaws.com
+  REGION: us-east-1
+
+jobs:
+  changes:
+    name: Check for Changes in Subfolder
+    runs-on: github-runner
+    defaults:
+      run:
+        working-directory: docker-image
+    outputs:
+      jupyterhub: ${{ steps.filter.outputs.jupyterhub }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          jupyterhub:
+            - 'docker-image/**'
+            
+  build-and-publish-docker-image-jupyterhub:
+    name: Build and publish docker image to ECR for Jupyterhub
+    needs: changes
+    if: ${{ needs.changes.outputs.jupyterhub == 'true' && (github.ref == 'refs/heads/main' || github.ref_type == 'tag') }}
+    runs-on: github-runner
+    defaults:
+      run:
+        working-directory: docker-image/
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install packages 
+      run: |
+        sudo apt-get update && sudo apt-get install -y curl jq python3-pip
+        pip install awscli==1.25.23
+    - name: Login to ECR 
+      run: aws ecr get-login-password --region ${{ env.REGION }} | docker login --username AWS --password-stdin ${{ env.REGISTRY }}
+    - name: Build
+      run: docker build -t ${{ env.REGISTRY }}/react-app:latest .
+    - name: Push
+      run: docker push ${{ env.REGISTRY }}/react-app:latest

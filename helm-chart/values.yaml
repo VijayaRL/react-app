@@ -1,0 +1,7 @@
+name: react-app
+
+replicas: 1
+
+image:
+  name: 819370969351.dkr.ecr.us-east-1.amazonaws.com/react-app
+  tag: latest

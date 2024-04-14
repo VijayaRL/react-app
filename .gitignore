@@ -1,0 +1,9 @@
+.DS_Store
+.terraform/
+.terraform.lock.hcl
+.terraform*
+tfplan
+terraform.tfstate
+terraform.tfstate.backup
+node_modules
+.$Deployment Diagram.drawio.bkp
